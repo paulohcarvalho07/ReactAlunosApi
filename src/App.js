@@ -10,8 +10,11 @@ function App() {
   const baseUrl = "https://localhost:44370/api/alunos";
 
   const [data, setData] = useState([]);
+  const [updateData, setUpdateData] = useState(true);
+
   const [modalIncluir, setModalIncluir] = useState(false);
   const [modalEditar, setModalEditar] = useState(false);
+  const [modalExcluir, setModalExcluir] = useState(false);
 
   const [alunoSelecionado, setAlunoSelecionado] = useState({
     id: '',
@@ -32,6 +35,10 @@ function App() {
 
   const abrirFecharModalEditar = () => {
     setModalEditar(!modalEditar);
+  }
+
+  const abrirFecharModalExcluir = () => {
+    setModalExcluir(!modalExcluir);
   }
 
   const handleChange = e => {
@@ -57,6 +64,7 @@ function App() {
     await axios.post(baseUrl, alunoSelecionado)
       .then(response => {
         setData(data.concat(response.data));
+        setUpdateData(true);
         abrirFecharModalIncluir();
       }).catch(error => {
         console.log(error);
@@ -83,9 +91,24 @@ function App() {
       })
   }
 
+  const pedidoDelete = async () => {
+    await axios.delete(baseUrl + "/" + alunoSelecionado.id)
+      .then(response => {
+        setData(data.filter(aluno => aluno.id !== response.data));
+        setUpdateData(true);
+        abrirFecharModalExcluir();
+      }).catch(error => {
+        console.log(error);
+      })
+  }
+
   useEffect(() => {
-    pedidoGet();
-  })
+    if (updateData) {
+      pedidoGet();
+      setUpdateData(false);
+    }
+  }, [updateData])
+
 
   return (
     <div className="aluno-container">
@@ -167,6 +190,16 @@ function App() {
         <ModalFooter>
           <button className="btn btn-primary" onClick={() => pedidoPut()}>Editar</button>{"  "}
           <button className="btn btn-danger" onClick={() => abrirFecharModalEditar()} >Cancelar</button>
+        </ModalFooter>
+      </Modal>
+
+      <Modal isOpen={modalExcluir}>
+        <ModalBody>
+          Confirma a exclusão deste(a) aluno(a) : {alunoSelecionado && alunoSelecionado.nome} ?
+        </ModalBody>
+        <ModalFooter>
+          <button className="btn btn-danger" onClick={() => pedidoDelete()} > Sim </button>
+          <button className="btn btn-secondary" onClick={() => abrirFecharModalExcluir()}> Não </button>
         </ModalFooter>
       </Modal>
 
